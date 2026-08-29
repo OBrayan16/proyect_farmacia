@@ -1,7 +1,7 @@
 module.exports = {
   HOST: "ep-tiny-heart-ayzrpyi8-pooler.c-5.us-east-2.aws.neon.tech",
   USER: "neondb_owner",
-  PASSWORD: process.env.DB_NAME || "neondb",
+  PASSWORD: process.env.DB_PASSWORD || "neondb",
   DB: "neondb",
   dialect: "postgres",
   dialectOptions: {
