@@ -37,6 +37,7 @@ require("./app/routes/empleado.routes")(app);
 require("./app/routes/proveedor.routes")(app);
 require("./app/routes/producto.routes")(app);
 require("./app/routes/factura.routes")(app);
+require("./app/routes/pago.routes")(app);
 
 // Configurar el puerto y encender el servidor
 const PORT = process.env.PORT || 8080;
