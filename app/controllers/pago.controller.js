@@ -13,7 +13,7 @@ exports.createCheckout = async (req, res) => {
       customer_email: email_cliente,
       line_items: [{
         price_data: {
-          currency: 'gtq', // Quetzales (puedes cambiarlo a 'usd')
+          currency: 'gtq', // Quetzales
           product_data: {
             name: `Pago de Factura #${id_factura}`,
             description: 'Compra en Farmacia',
@@ -28,12 +28,12 @@ exports.createCheckout = async (req, res) => {
       cancel_url: 'https://proyect-farmacia.onrender.com/api/pagos/cancel',
     });
 
-    // 2. Guardar el registro en la tabla transacciones_pago
+    // 2. Guardar el registro en la tabla transacciones_pago (NOMBRES DE COLUMNAS CORREGIDOS)
     await TransaccionPago.create({
       id_factura: id_factura,
-      id_transaccion_stripe: session.id,
+      id_transaccion_externa: session.id, // <-- Corregido para PostgreSQL
       monto: total,
-      metodo_pago: 'Tarjeta',
+      pasarela: 'Stripe',                 // <-- Corregido para PostgreSQL
       estado_pago: 'Pendiente'
     });
 
@@ -48,6 +48,7 @@ exports.createCheckout = async (req, res) => {
 // Métodos de respuesta simples para las redirecciones
 exports.success = (req, res) => res.send("¡Pago completado con éxito!");
 exports.cancel = (req, res) => res.send("El pago fue cancelado.");
+
 exports.webhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
@@ -65,9 +66,9 @@ exports.webhook = async (req, res) => {
     const session = event.data.object;
 
     try {
-      // 3. Buscamos esa transacción específica en tu base de datos
+      // 3. Buscamos esa transacción específica en tu base de datos (COLUMNA CORREGIDA)
       const transaccion = await TransaccionPago.findOne({ 
-        where: { id_transaccion_stripe: session.id } 
+        where: { id_transaccion_externa: session.id } // <-- Corregido para PostgreSQL
       });
 
       if (transaccion) {
