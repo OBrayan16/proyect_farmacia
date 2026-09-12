@@ -48,3 +48,39 @@ exports.createCheckout = async (req, res) => {
 // Métodos de respuesta simples para las redirecciones
 exports.success = (req, res) => res.send("¡Pago completado con éxito!");
 exports.cancel = (req, res) => res.send("El pago fue cancelado.");
+exports.webhook = async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    // 1. Verificamos la firma criptográfica (Stripe usa la variable de entorno aquí)
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error("⚠️ Error de seguridad del Webhook:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // 2. Si la verificación es exitosa y el evento es un pago completado
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+
+    try {
+      // 3. Buscamos esa transacción específica en tu base de datos
+      const transaccion = await TransaccionPago.findOne({ 
+        where: { id_transaccion_stripe: session.id } 
+      });
+
+      if (transaccion) {
+        // 4. ¡Magia! Cambiamos el estado de 'Pendiente' a 'Pagado'
+        transaccion.estado_pago = 'Pagado';
+        await transaccion.save();
+        console.log(`✅ ¡Éxito! Transacción ${session.id} actualizada a Pagado automáticamente.`);
+      }
+    } catch (error) {
+      console.error("❌ Error actualizando la base de datos:", error);
+    }
+  }
+
+  // 5. Siempre debemos responderle a Stripe con un 200 OK para que sepa que lo recibimos
+  res.json({ recibido: true });
+};
