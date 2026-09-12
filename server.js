@@ -15,7 +15,6 @@ app.use(cors(corsOptions));
 
 // Webhook de Stripe (Debe ir estrictamente ANTES de express.json)
 const pagosController = require("./app/controllers/pago.controller.js");
-const express = require("express"); // Nos aseguramos de tener express aquí
 app.post('/api/pagos/webhook', express.raw({type: 'application/json'}), pagosController.webhook);
 
 // Parse requests of content-type - application/json
